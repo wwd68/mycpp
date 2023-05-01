@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+	<gresource prefix="/glade">
+		<file>dlg_login.glade</file>
+		<file>dlg_paramset.glade</file>
+		<file>MainWindow.glade</file>
+	</gresource>
+</gresources>
+
