@@ -193,17 +193,16 @@ void M::thd1run()
             std::cout<<fs<<std::endl;
             auto title=fs;
             fs=dir+'/'+fs;              //目录+/+文件名
-            //cr.~RefPtr();
             auto srcimg=cv::imread(fs);      //从文件读图像
             cv::resize(srcimg,srcimg,cv::Size(srcimg.cols/2,srcimg.rows/2),0,0);
             if(srcimg.empty())continue;         //读图像失败下一个
             //进行人脸识别
-            faceRecongize(srcimg);
+            faceRecongize1(srcimg);
             cv::cvtColor(srcimg,srcimg,cv::COLOR_BGR2RGB);//COLOR_BGR2GRAY,COLOR_BGR2RGB
             //imshow("face", srcimg);
             //this->mtximg1.lock();       //图像缓冲区加锁
             //this->img1=Gdk::Pixbuf::create_from_file(fs,
-            //        this->mDrwArea1->get_width(),this->mDrwArea1->get_height());   //用文件更新图像缓冲区
+            //this->mDrwArea1->get_width(),this->mDrwArea1->get_height());   //用文件更新图像缓冲区
             //Glib::signal_idle().connect([](){});
             //int r=(*srcimg.step.p+3)/4*4;
             this->img1=Gdk::Pixbuf::create_from_data(
@@ -214,45 +213,18 @@ void M::thd1run()
                 srcimg.cols,
                 srcimg.rows,
                 *srcimg.step.p);
-            if(!this->img1) std::cout<<"失败"<<std::endl;
-                    //this->mtximg1.unlock();     //解锁
-
-                    auto rw=[this,title](){
-                          this->mLbimage1->set_label(title);
-                          this->mDrwArea1->queue_draw();
-                          //auto cr=this->mDrwArea1->get_window()->create_cairo_context();
-                          //cr->move_to(40,40);
-                          //cr->set_source_rgb(1,1,1);
-                          //cr->show_text("abcdef");
-                      };   //声明匿名函数
-            /*
+            if(!this->img1) {
+                std::cout<<"失败"<<std::endl;
+            }
             auto mt=Glib::MainContext::get_default();
             mt->invoke([this,title,srcimg](){
-                this->mtximg1.lock();       //图像缓冲区加锁
-                //this->img1=Gdk::Pixbuf::create_from_file(fs,
-                //        this->mDrwArea1->get_width(),this->mDrwArea1->get_height());   //用文件更新图像缓冲区
-                //Glib::signal_idle().connect([](){});
-                //int r=(*srcimg.step.p+3)/4*4;
-                this->img1=Gdk::Pixbuf::create_from_data(
-                        (guint8*)srcimg.data,
-                        Gdk::COLORSPACE_RGB,
-                        false,
-                        8,//srcimg.depth(),
-                        srcimg.cols,
-                        srcimg.rows,
-                        *srcimg.step.p);
-                if(!this->img1) std::cout<<"失败"<<std::endl;
-                this->mtximg1.unlock();     //解锁
                 this->mLbimage1->set_label(title);
                 this->mDrwArea1->queue_draw();
                 return false;
-            });*/
-            Invoke1.connect(rw);        //连接主界面线程
-            Invoke1();      //主界面线程调用匿名函数rw
-            //rw();
+            });
             t.stop();
             std::cout<<"识别时间:"<<t.elapsed()<<std::endl;
-                    Glib::usleep(50e3);
+            Glib::usleep(50e3);
             //break;
         }
 
@@ -265,7 +237,7 @@ void M::thd1run()
 /// @brief 图像2线程处理程序
 void M::thd2run()
 {
-    std::string dir=param.find("imgpath2")->second;
+    std::string dir=param.find("imgpath2")->second;     //参数字典找到图像目录
     std::cout<<dir<<std::endl;
     Glib::Dir ds(dir);
     try {
@@ -273,40 +245,44 @@ void M::thd2run()
         {
             Glib::Timer t;
             t.start();
-            auto fs=ds.read_name();
-            if(fs.empty())break;
+            auto fs=ds.read_name();     //读一个文件名
+            if(fs.empty())break;    //空读下一个
             std::cout<<fs<<std::endl;
             auto title=fs;
-            fs=dir+'/'+fs;
-            //this->mtximg1.lock();
-            this->img2=Gdk::Pixbuf::create_from_file(fs,this->mDrwArea2->get_width(),this->mDrwArea2->get_height());
-            //this->mtximg1.unlock();
-            auto rw=[this ,title](){
-                //this->img2=Gdk::Pixbuf::create_from_file(fs);
-                this->mLbimage2->set_label(title);
-                this->mDrwArea2->queue_draw();
-            };
-            /*
+            fs=dir+'/'+fs;              //目录+/+文件名
+            auto srcimg=cv::imread(fs);      //从文件读图像
+            cv::resize(srcimg,srcimg,cv::Size(srcimg.cols/2,srcimg.rows/2),0,0);
+            if(srcimg.empty())continue;         //读图像失败下一个
+            //进行人脸识别
+            faceRecongize2(srcimg);
+            cv::cvtColor(srcimg,srcimg,cv::COLOR_BGR2RGB);//COLOR_BGR2GRAY,COLOR_BGR2RGB
+            this->img2=Gdk::Pixbuf::create_from_data(
+                (guint8*)srcimg.data,
+                Gdk::COLORSPACE_RGB,
+                false,
+                8,//srcimg.depth(),
+                srcimg.cols,
+                srcimg.rows,
+                *srcimg.step.p);
+            if(!this->img2){
+                std::cout<<"失败"<<std::endl;
+            }
             auto mt=Glib::MainContext::get_default();
-            mt->invoke([this,title,fs](){
-                this->mtximg1.lock();
-                this->img2=Gdk::Pixbuf::create_from_file(fs,this->mDrwArea2->get_width(),this->mDrwArea2->get_height());
-                this->mtximg1.unlock();
+            mt->invoke([this,title,srcimg](){
                 this->mLbimage2->set_label(title);
                 this->mDrwArea2->queue_draw();
                 return false;
-            });*/
-            Invoke2.connect(rw);
-            Invoke2();
-            //rw();
-            Glib::usleep(100e3);
+            });
             t.stop();
-            std::cout<<"run2:"<<t.elapsed()<<std::endl;
+            std::cout<<"识别时间:"<<t.elapsed()<<std::endl;
+            Glib::usleep(50e3);
+            //break;
         }
 
     }  catch (...) {
         return;
     }
+
 }
 /// @brief 主线程处理程序
 void M::MainThread()
@@ -364,37 +340,60 @@ bool M::InitFaceDecet()
     int error=0;
     auto filename=param.find("face_cascade_name")->second;
     if(!filename.empty())
+    {
         // 加载脸部分类器文件
-        if (!faceCascade.load(filename))
+        if (!faceCascade1.load(filename))
         {
-            std::cout << "load face_cascade_name failed. " << std::endl;
+            std::cout << "load face_cascade_name1 failed. " << std::endl;
             error++;
         }
+        if (!faceCascade2.load(filename))
+        {
+            std::cout << "load face_cascade_name2 failed. " << std::endl;
+            error++;
+        }
+    }
     filename=param.find("eyes_cascade_name")->second;
     if(!filename.empty())
+    {
         // 加载眼睛部分分类器文件
-        if (!eyesCascade.load(filename))
+        if (!eyesCascade1.load(filename))
         {
-            std::cout << "load eyes_cascade_name failed. " << std::endl;
+            std::cout << "load eyes_cascade_name1 failed. " << std::endl;
             error++;
         }
+        // 加载眼睛部分分类器文件
+        if (!eyesCascade2.load(filename))
+        {
+            std::cout << "load eyes_cascade_name2 failed. " << std::endl;
+            error++;
+        }
+    }
     filename=param.find("mouth_cascade_name")->second;
 
     if(!filename.empty())
+    {
         // 加载嘴部分类器文件
-        if (!mouthCascade.load(filename))
+        if (!mouthCascade1.load(filename))
         {
-            std::cout << "load mouth_cascade_name failed. " << std::endl;
+            std::cout << "load mouth_cascade_name1 failed. " << std::endl;
             error++;
         }
+        // 加载嘴部分类器文件
+        if (!mouthCascade2.load(filename))
+        {
+            std::cout << "load mouth_cascade_name2 failed. " << std::endl;
+            error++;
+        }
+    }
     return error==0;
 }
 //人脸识别
-void M::faceRecongize(cv::Mat srcimg)
+void M::faceRecongize1(cv::Mat srcimg)
 {
     std::vector<cv::Rect> faces;
     // 检测人脸
-    faceCascade.detectMultiScale(srcimg, faces, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+    faceCascade1.detectMultiScale(srcimg, faces, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
     for (int i = 0; i < faces.size(); i++) {
 
         // 用椭圆画出人脸部分
@@ -405,7 +404,7 @@ void M::faceRecongize(cv::Mat srcimg)
         std::vector<cv::Rect> eyes;
 
         // 检测眼睛
-        eyesCascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+        eyesCascade1.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
         for (int j = 0; j < eyes.size(); j++)
         {
             // 用圆画出眼睛部分
@@ -418,7 +417,53 @@ void M::faceRecongize(cv::Mat srcimg)
         std::vector<cv::Rect> mouth;
 
         // 检测嘴部
-        mouthCascade.detectMultiScale(mouthROI, mouth, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+        mouthCascade1.detectMultiScale(mouthROI, mouth, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+        for (int k = 0; k < mouth.size(); k++)
+        {
+            //用长方形画出嘴部
+            cv::Rect rect(faces[i].x + mouth[k].x, faces[i].y + mouth[k].y, mouth[k].width, mouth[k].height);
+            rectangle(srcimg, rect, cv::Scalar(0, 255, 0), 2, 8, 0);
+        }
+
+        // 检测到两个眼睛和一个嘴巴, 可认为检测到有效人脸
+        if (eyes.size() >= 2 && mouth.size() >= 1) {
+
+            // 人脸上方区域写字进行标识
+            cv::Point centerText(faces[i].x + faces[i].width / 2 - 40, faces[i].y - 20);
+            cv::putText(srcimg, "face", centerText, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+        }
+    }
+}
+//人脸识别
+void M::faceRecongize2(cv::Mat srcimg)
+{
+    std::vector<cv::Rect> faces;
+    // 检测人脸
+    faceCascade2.detectMultiScale(srcimg, faces, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+    for (int i = 0; i < faces.size(); i++) {
+
+        // 用椭圆画出人脸部分
+        cv::Point center(faces[i].x + faces[i].width / 2, faces[i].y + faces[i].height / 2);
+        ellipse(srcimg, center, cv::Size(faces[i].width / 2, faces[i].height / 2), 0, 0, 360, cv::Scalar(255, 0, 255), 4, 8, 0);
+
+        cv::Mat faceROI = srcimg(faces[i]);
+        std::vector<cv::Rect> eyes;
+
+        // 检测眼睛
+        eyesCascade2.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+        for (int j = 0; j < eyes.size(); j++)
+        {
+            // 用圆画出眼睛部分
+            cv::Point eye_center(faces[i].x + eyes[j].x + eyes[j].width / 2, faces[i].y + eyes[j].y + eyes[j].height / 2);
+            int radius = cvRound((eyes[j].width + eyes[j].height)*0.25);
+            circle(srcimg, eye_center, radius, cv::Scalar(255, 0, 0), 4, 8, 0);
+        }
+
+        cv::Mat mouthROI = srcimg(faces[i]);
+        std::vector<cv::Rect> mouth;
+
+        // 检测嘴部
+        mouthCascade2.detectMultiScale(mouthROI, mouth, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
         for (int k = 0; k < mouth.size(); k++)
         {
             //用长方形画出嘴部

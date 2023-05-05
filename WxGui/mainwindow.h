@@ -72,18 +72,22 @@ private:
     //Glib::Mutex mtximg1;
     //Glib::Mutex mtximg2;
     //界面更新用回界面线程的调用
-    Glib::Dispatcher Invoke1;
-    Glib::Dispatcher Invoke2;
+    //Glib::Dispatcher Invoke1;
+    //Glib::Dispatcher Invoke2;
 
     //初始化参数字典
     void InitParam();
 
     //人脸,眼,嘴识别器对象
-    cv::CascadeClassifier faceCascade;
-    cv::CascadeClassifier eyesCascade;
-    cv::CascadeClassifier mouthCascade;
+    cv::CascadeClassifier faceCascade1;
+    cv::CascadeClassifier eyesCascade1;
+    cv::CascadeClassifier mouthCascade1;
+    cv::CascadeClassifier faceCascade2;
+    cv::CascadeClassifier eyesCascade2;
+    cv::CascadeClassifier mouthCascade2;
     //人脸识别
-    void faceRecongize(cv::Mat srcimg);
+    void faceRecongize1(cv::Mat srcimg);
+    void faceRecongize2(cv::Mat srcimg);
 
     //初始化分类器 返回true无错误
     bool InitFaceDecet();

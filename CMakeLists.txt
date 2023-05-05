@@ -58,6 +58,10 @@ target_link_libraries(mycpp ${PKG_GTKMM_LIBRARIES})
 #拷贝glade可视化设计的界面文件.glade从源码文件目录到生成项目目录中
 #file(COPY ./WxGui/MainWindow.glade DESTINATION ./WxGui)
 #file(COPY ./WxGui/dlg_paramset.glade DESTINATION ./WxGui)
+#拷贝分类器配置文件从源码文件目录到生成项目目录中
+file(COPY ./config/haarcascade_eye.xml DESTINATION ./config)
+file(COPY ./config/haarcascade_frontalface_alt.xml DESTINATION ./config)
+file(COPY ./config/haarcascade_mcs_mouth.xml DESTINATION ./config)
 
 #搜索OpenCV库，必需是安装的，没有会错误停止
 find_package(OpenCV REQUIRED)
