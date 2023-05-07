@@ -43,9 +43,9 @@ private:
     Gtk::Label *mlboperator;
     Gtk::Label *mlbdatabase;
     Gtk::Label *mlbPLC;
-    Gtk::Label *mlbprogress;
 
-    Gtk::ProgressBar *mprogressbar;
+    Gtk::ProgressBar *mProcgess1;
+    Gtk::ProgressBar *mProcgess2;
     //声名参数字典
     Dict param;
     //主线程指针，指示主程序运行状态
@@ -78,14 +78,17 @@ private:
     //初始化参数字典
     void InitParam();
 
-    //人脸,眼,嘴识别器对象
+    //人脸,眼,嘴识别器对象,不是线程安全的
+    //要为每个线程单独分配一个对象
     cv::CascadeClassifier faceCascade1;
     cv::CascadeClassifier eyesCascade1;
     cv::CascadeClassifier mouthCascade1;
+
     cv::CascadeClassifier faceCascade2;
     cv::CascadeClassifier eyesCascade2;
     cv::CascadeClassifier mouthCascade2;
-    //人脸识别
+    //人脸识别,不是线程安全的
+    //要为每个线程单独写一个函数
     void faceRecongize1(cv::Mat srcimg);
     void faceRecongize2(cv::Mat srcimg);
 

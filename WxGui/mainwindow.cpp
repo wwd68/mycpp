@@ -22,9 +22,9 @@ M::MainWindow(BaseObjectType *bot,const Glib::RefPtr<Gtk::Builder> &Bdptr)
     builder->get_widget<Gtk::Label>("mlboperator",mlboperator);
     builder->get_widget<Gtk::Label>("mlbdatabase",mlbdatabase);
     builder->get_widget<Gtk::Label>("mlbPLC",mlbPLC);
-    builder->get_widget<Gtk::Label>("mlbprogress",mlbprogress);
 
-    builder->get_widget<Gtk::ProgressBar>("mprogressbar",mprogressbar);
+    builder->get_widget<Gtk::ProgressBar>("mProcgess1",mProcgess1);
+    builder->get_widget<Gtk::ProgressBar>("mProcgess2",mProcgess2);
 
 
     //mimg1->signal_draw().connect(sigc::mem_fun(*this, &M::on_draw_lb));
@@ -183,53 +183,52 @@ void M::thd1run()
     std::string dir=param.find("imgpath1")->second;     //参数字典找到图像1目录
     std::cout<<dir<<std::endl;
     Glib::Dir ds(dir);
-    try {
-        while(true)
-        {
-            Glib::Timer t;
-            t.start();
-            auto fs=ds.read_name();     //读一个文件名
-            if(fs.empty())break;    //空读下一个
-            std::cout<<fs<<std::endl;
-            auto title=fs;
-            fs=dir+'/'+fs;              //目录+/+文件名
-            auto srcimg=cv::imread(fs);      //从文件读图像
-            cv::resize(srcimg,srcimg,cv::Size(srcimg.cols/2,srcimg.rows/2),0,0);
-            if(srcimg.empty())continue;         //读图像失败下一个
-            //进行人脸识别
-            faceRecongize1(srcimg);
-            cv::cvtColor(srcimg,srcimg,cv::COLOR_BGR2RGB);//COLOR_BGR2GRAY,COLOR_BGR2RGB
-            //imshow("face", srcimg);
-            //this->mtximg1.lock();       //图像缓冲区加锁
-            //this->img1=Gdk::Pixbuf::create_from_file(fs,
-            //this->mDrwArea1->get_width(),this->mDrwArea1->get_height());   //用文件更新图像缓冲区
-            //Glib::signal_idle().connect([](){});
-            //int r=(*srcimg.step.p+3)/4*4;
-            this->img1=Gdk::Pixbuf::create_from_data(
-                (guint8*)srcimg.data,
-                Gdk::COLORSPACE_RGB,
-                false,
-                8,//srcimg.depth(),
-                srcimg.cols,
-                srcimg.rows,
-                *srcimg.step.p);
-            if(!this->img1) {
-                std::cout<<"失败"<<std::endl;
-            }
-            auto mt=Glib::MainContext::get_default();
-            mt->invoke([this,title,srcimg](){
-                this->mLbimage1->set_label(title);
-                this->mDrwArea1->queue_draw();
-                return false;
-            });
-            t.stop();
-            std::cout<<"识别时间:"<<t.elapsed()<<std::endl;
-            Glib::usleep(50e3);
-            //break;
-        }
+    //文件名的数组
+    std::vector<Glib::ustring> files;
 
-    }  catch (...) {
-        return;
+     //取得文件列表
+    while(true)
+    {
+        auto fs=ds.read_name();		//取得文件名
+        if(fs.empty())break;		//没有其它文件了
+        files.push_back(dir+"/"+fs);	//目录加上文件,存入数组
+    }
+    int i=0;	//文件计数
+    int sum=files.size();	//目录下的文件总数
+    Glib::Timer t;	//计时器
+    auto mt=Glib::MainContext::get_default();	//主线程上下文
+    for(auto itr=files.begin();itr!=files.end();itr++)
+    {
+        t.start();	//开始计时
+        auto fs=*itr;
+        auto srcimg=cv::imread(fs);      //从文件读图像
+        cv::resize(srcimg,srcimg,cv::Size(srcimg.cols/2,srcimg.rows/2),0,0);
+        if(srcimg.empty())continue;         //读图像失败下一个
+        //进行人脸识别,为线程调用对应的分类器
+        faceRecongize1(srcimg);
+        cv::cvtColor(srcimg,srcimg,cv::COLOR_BGR2RGB);//COLOR_BGR2GRAY,COLOR_BGR2RGB
+        this->img1=Gdk::Pixbuf::create_from_data(
+            (guint8*)srcimg.data,
+            Gdk::COLORSPACE_RGB,
+            false,
+            8,//srcimg.depth(),
+            srcimg.cols,
+            srcimg.rows,
+            *srcimg.step.p);
+        if(!this->img1) {
+            std::cout<<"失败"<<std::endl;
+        }
+        i++;
+	//UI主线程更新界面
+        mt->invoke([this,fs,srcimg,i,sum](){
+            this->mProcgess1->set_fraction(1.0*i/sum);	//更新线程1进度条
+            this->mLbimage1->set_label(fs);	//更新图像标题为文件名
+            this->mDrwArea1->queue_draw();	//更新图像
+            return false;	//只执行一次
+        });
+        t.stop();	//停止计时
+        std::cout<<"识别时间:"<<t.elapsed()<<std::endl;
+        Glib::usleep(50e3);	//延时50ms
     }
 
 }
@@ -237,50 +236,53 @@ void M::thd1run()
 /// @brief 图像2线程处理程序
 void M::thd2run()
 {
-    std::string dir=param.find("imgpath2")->second;     //参数字典找到图像目录
+    std::string dir=param.find("imgpath2")->second;     //参数字典找到图像2目录
     std::cout<<dir<<std::endl;
     Glib::Dir ds(dir);
-    try {
-        while(true)
-        {
-            Glib::Timer t;
-            t.start();
-            auto fs=ds.read_name();     //读一个文件名
-            if(fs.empty())break;    //空读下一个
-            std::cout<<fs<<std::endl;
-            auto title=fs;
-            fs=dir+'/'+fs;              //目录+/+文件名
-            auto srcimg=cv::imread(fs);      //从文件读图像
-            cv::resize(srcimg,srcimg,cv::Size(srcimg.cols/2,srcimg.rows/2),0,0);
-            if(srcimg.empty())continue;         //读图像失败下一个
-            //进行人脸识别
-            faceRecongize2(srcimg);
-            cv::cvtColor(srcimg,srcimg,cv::COLOR_BGR2RGB);//COLOR_BGR2GRAY,COLOR_BGR2RGB
-            this->img2=Gdk::Pixbuf::create_from_data(
-                (guint8*)srcimg.data,
-                Gdk::COLORSPACE_RGB,
-                false,
-                8,//srcimg.depth(),
-                srcimg.cols,
-                srcimg.rows,
-                *srcimg.step.p);
-            if(!this->img2){
-                std::cout<<"失败"<<std::endl;
-            }
-            auto mt=Glib::MainContext::get_default();
-            mt->invoke([this,title,srcimg](){
-                this->mLbimage2->set_label(title);
-                this->mDrwArea2->queue_draw();
-                return false;
-            });
-            t.stop();
-            std::cout<<"识别时间:"<<t.elapsed()<<std::endl;
-            Glib::usleep(50e3);
-            //break;
-        }
+    std::vector<Glib::ustring> files;
 
-    }  catch (...) {
-        return;
+    //取得文件列表
+    while(true)
+    {
+        auto fs=ds.read_name();
+        if(fs.empty())break;
+        files.push_back(dir+"/"+fs);
+    }
+    int i=0;
+    int sum=files.size();
+    Glib::Timer t;
+    auto mt=Glib::MainContext::get_default();
+    for(auto itr=files.begin();itr!=files.end();itr++)
+    {
+        t.start();
+        auto fs=*itr;
+        auto srcimg=cv::imread(fs);      //从文件读图像
+        cv::resize(srcimg,srcimg,cv::Size(srcimg.cols/2,srcimg.rows/2),0,0);
+        if(srcimg.empty())continue;         //读图像失败下一个
+        //进行人脸识别
+        faceRecongize2(srcimg);
+        cv::cvtColor(srcimg,srcimg,cv::COLOR_BGR2RGB);//COLOR_BGR2GRAY,COLOR_BGR2RGB
+        this->img2=Gdk::Pixbuf::create_from_data(
+            (guint8*)srcimg.data,
+            Gdk::COLORSPACE_RGB,
+            false,
+            8,//srcimg.depth(),
+            srcimg.cols,
+            srcimg.rows,
+            *srcimg.step.p);
+        if(!this->img2) {
+            std::cout<<"失败"<<std::endl;
+        }
+        i++;
+        mt->invoke([this,fs,srcimg,i,sum](){
+            this->mProcgess2->set_fraction(1.0*i/sum);
+            this->mLbimage2->set_label(fs);
+            this->mDrwArea2->queue_draw();
+            return false;
+        });
+        t.stop();
+        std::cout<<"识别时间:"<<t.elapsed()<<std::endl;
+                Glib::usleep(50e3);
     }
 
 }

@@ -14,6 +14,7 @@ int main(int argc,char **argv)
     auto myrc=Gio::Resource::create_from_file("WxGui/mygrec.rc");
     //资源注册为全局
     myrc->register_global();
+    auto ss=myrc->enumerate_children("/");
     //从全局资源中读取主窗口界面
     auto myuiptr=Gtk::Builder::create_from_resource("/glade/MainWindow.glade");
     MainWindow *mwin=nullptr;
