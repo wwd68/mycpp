@@ -16,11 +16,12 @@
             <property name="layout-style">end</property>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">注册(_R)</property>
+                <property name="label">gtk-add</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
-                <property name="use-underline">True</property>
+                <property name="use-stock">True</property>
+                <property name="always-show-image">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -30,11 +31,13 @@
             </child>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">登录(_L)</property>
+                <property name="label">gtk-ok</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
                 <property name="use-underline">True</property>
+                <property name="use-stock">True</property>
+                <property name="always-show-image">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -49,6 +52,7 @@
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
                 <property name="use-stock">True</property>
+                <property name="always-show-image">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>

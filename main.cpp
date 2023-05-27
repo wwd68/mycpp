@@ -2,6 +2,7 @@
 #include "gtkmm.h"
 #include "dlg_paramset.h"
 #include "mainwindow.h"
+#include "mysql/mysql.h"
 
 using namespace std;
 using namespace Gtk;

@@ -90,9 +90,29 @@ M::MainWindow(BaseObjectType *bot,const Glib::RefPtr<Gtk::Builder> &Bdptr)
     mlbdatabase->override_color(gcolor);
     mlbPLC->override_color(gcolor);
 
-    mToolBar->override_background_color(Gdk::RGBA("#004444"));
+    //mToolBar->override_background_color(Gdk::RGBA("#004444"));
+    //mToolBar->override_color(Gdk::RGBA("#ffffff"));
+
+    //mToolBtLogin->override_color(Gdk::RGBA("#ffffff"));
+    //auto chs= mToolBtLogin->get_children();
+    //chs[0]->override_color(Gdk::RGBA("#ffffff"));
+
+    //chs= mToolBtRun->get_children();
+    //chs[0]->override_color(Gdk::RGBA("#ffffff"));
+
+    //chs= mToolBtPause->get_children();
+    //chs[0]->override_color(Gdk::RGBA("#ffffff"));
+
+    //chs= mToolBtStop->get_children();
+    //chs[0]->override_color(Gdk::RGBA("#ffffff"));
+
+    //chs= mToolBtSet->get_children();
+    //chs[0]->override_color(Gdk::RGBA("#ffffff"));
+
     mLbimage1->override_background_color(Gdk::RGBA("#004400"));
     mLbimage2->override_background_color(Gdk::RGBA("#004400"));
+    mLbimage1->override_color(Gdk::RGBA("#ffffff"));
+    mLbimage2->override_color(Gdk::RGBA("#ffffff"));
 
     mToolBtLogin->signal_clicked().connect([](){
         std::cout<<"on_ToolBt_clicked"<<std::endl;
@@ -186,7 +206,7 @@ void M::thd1run()
     //文件名的数组
     std::vector<Glib::ustring> files;
 
-     //取得文件列表
+    //取得文件列表
     while(true)
     {
         auto fs=ds.read_name();		//取得文件名
@@ -219,7 +239,7 @@ void M::thd1run()
             std::cout<<"失败"<<std::endl;
         }
         i++;
-	//UI主线程更新界面
+        //UI主线程更新界面
         mt->invoke([this,fs,srcimg,i,sum](){
             this->mProcgess1->set_fraction(1.0*i/sum);	//更新线程1进度条
             this->mLbimage1->set_label(fs);	//更新图像标题为文件名
@@ -228,7 +248,7 @@ void M::thd1run()
         });
         t.stop();	//停止计时
         std::cout<<"识别时间:"<<t.elapsed()<<std::endl;
-        Glib::usleep(50e3);	//延时50ms
+                Glib::usleep(50e3);	//延时50ms
     }
 
 }
